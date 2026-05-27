@@ -32,7 +32,31 @@
                         <select class="select" id="voiceSelect"></select>
                     </div>
 
-                    
+                    <div class="slider">
+                        <div class="slider__header">
+                            <span class="slider__label">Швидкість</span>
+                            <span class="slider__value" id="rateValue">0%</span>
+                        </div>
+                        <input type="range" id="rateSlider" min="-50" max="50" step="5" value="0">
+                    </div>
+
+                    <div class="slider">
+                        <div class="slider__header">
+                            <span class="slider__label">Гучність</span>
+                            <span class="slider__value" id="volumeValue">0%</span>
+                        </div>
+                        <input type="range" id="volumeSlider" min="-50" max="50" step="5" value="0">
+                    </div>
+
+                    <div class="slider">
+                        <div class="slider__header">
+                            <span class="slider__label">Висота тону</span>
+                            <span class="slider__value" id="pitchValue">0 Hz</span>
+                        </div>
+                        <input type="range" id="pitchSlider" min="-50" max="50" step="5" value="0">
+                    </div>
+
+                </div>
             </div>
         </section>
 
