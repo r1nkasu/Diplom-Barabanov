@@ -17,43 +17,13 @@
             <p>Перетворюйте текст на природне мовлення за допомогою нейронних мереж</p>
         </header>
 
-        <!-- Вибір рушія -->
-        <div class="engine-tabs" role="tablist" style="display:none">
-            <button class="engine-tab active" data-engine="edge_tts" role="tab">
-                Microsoft Edge TTS
-                <span class="engine-tab__badge">Безкоштовно</span>
-            </button>
-            <button class="engine-tab" data-engine="elevenlabs" role="tab">
-                ElevenLabs
-                <span class="engine-tab__badge" id="elevenlabsBadge">Підключено</span>
-            </button>
-        </div>
-
-        <!-- Notice для ElevenLabs -->
-        <div class="notice notice--warning" id="elevenlabsNotice" style="display:none !important;visibility:hidden;">
-            <svg class="notice__icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
-                <line x1="12" y1="9" x2="12" y2="13"/>
-                <line x1="12" y1="17" x2="12.01" y2="17"/>
-            </svg>
-            <div>
-                <strong>Безкоштовний план ElevenLabs обмежений.</strong>
-                Якщо синтез не вдається — більшість стандартних голосів через API доступні лише на платних тарифах.
-                Рекомендуємо використовувати Microsoft Edge TTS, який працює безкоштовно та без обмежень.
-            </div>
         </div>
 
         <!-- Налаштування -->
         <section class="card">
             <div class="card__header">
                 <span class="card__title">Параметри</span>
-                <button class="btn-sm" id="refreshVoicesBtn" style="display:none !important;">
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                        <polyline points="23 4 23 10 17 10"/>
-                        <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
-                    </svg>
-                    Оновити
-                </button>
+                
             </div>
             <div class="card__body">
                 <div class="form-grid" id="settingsGrid">
@@ -62,57 +32,7 @@
                         <select class="select" id="voiceSelect"></select>
                     </div>
 
-                    <div class="field" id="modelGroup" style="display:none !important;">
-                        <label class="field__label" for="modelSelect">Модель</label>
-                        <select class="select" id="modelSelect">
-                            <option value="eleven_multilingual_v2">Multilingual v2 — найкраща якість</option>
-                            <option value="eleven_flash_v2_5">Flash v2.5 — найшвидша</option>
-                            <option value="eleven_turbo_v2_5">Turbo v2.5 — баланс</option>
-                        </select>
-                    </div>
-
-                    <!-- Edge TTS параметри -->
-                    <div class="slider edge-only">
-                        <div class="slider__header">
-                            <span class="slider__label">Швидкість</span>
-                            <span class="slider__value" id="rateValue">0%</span>
-                        </div>
-                        <input type="range" id="rateSlider" min="-50" max="50" step="5" value="0">
-                    </div>
-
-                    <div class="slider edge-only">
-                        <div class="slider__header">
-                            <span class="slider__label">Гучність</span>
-                            <span class="slider__value" id="volumeValue">0%</span>
-                        </div>
-                        <input type="range" id="volumeSlider" min="-50" max="50" step="5" value="0">
-                    </div>
-
-                    <div class="slider edge-only">
-                        <div class="slider__header">
-                            <span class="slider__label">Висота тону</span>
-                            <span class="slider__value" id="pitchValue">0 Hz</span>
-                        </div>
-                        <input type="range" id="pitchSlider" min="-50" max="50" step="5" value="0">
-                    </div>
-
-                    <!-- ElevenLabs параметри -->
-                    <div class="slider elevenlabs-only" style="display:none !important;">
-                        <div class="slider__header">
-                            <span class="slider__label">Стабільність</span>
-                            <span class="slider__value" id="stabilityValue">0.50</span>
-                        </div>
-                        <input type="range" id="stabilitySlider" min="0" max="1" step="0.05" value="0.5">
-                    </div>
-
-                    <div class="slider elevenlabs-only" style="display:none !important;">
-                        <div class="slider__header">
-                            <span class="slider__label">Схожість</span>
-                            <span class="slider__value" id="similarityValue">0.75</span>
-                        </div>
-                        <input type="range" id="similaritySlider" min="0" max="1" step="0.05" value="0.75">
-                    </div>
-                </div>
+                    
             </div>
         </section>
 
@@ -224,9 +144,7 @@
         const sourceText = $('sourceText');
         const sourceCount = $('sourceCount');
         const voiceSelect = $('voiceSelect');
-        const modelSelect = $('modelSelect');
-        const modelGroup = $('modelGroup');
-        const audioPlayer = $('audioPlayer');
+                        const audioPlayer = $('audioPlayer');
         const audioPlayerSection = $('audioPlayerSection');
         const audioInfo = $('audioInfo');
         const statusDot = $('statusDot');
@@ -234,10 +152,7 @@
         const synthesizeBtn = $('synthesizeBtn');
         const downloadBtn = $('downloadBtn');
         const clearBtn = $('clearBtn');
-        const refreshVoicesBtn = $('refreshVoicesBtn');
-        const elevenlabsNotice = $('elevenlabsNotice');
-        const elevenlabsBadge = $('elevenlabsBadge');
-
+                        
         const sliders = {
             rate: {input: $('rateSlider'), value: $('rateValue'), suffix: '%'},
             volume: {input: $('volumeSlider'), value: $('volumeValue'), suffix: '%'},
@@ -246,7 +161,7 @@
             similarity: {input: $('similaritySlider'), value: $('similarityValue'), suffix: ''},
         };
 
-        let currentEngine = 'edge_tts'; // engine fixed — UI shows unified voice list
+        
         let currentFile = null;
         let detectionTimer = null;
         let lastDetectedLang = null;
@@ -282,102 +197,24 @@
             });
         }
 
-        // ===== Перемикання рушіїв =====
-        document.querySelectorAll('.engine-tab').forEach(tab => {
-            tab.addEventListener('click', () => {
-                document.querySelectorAll('.engine-tab').forEach(t => t.classList.remove('active'));
-                tab.classList.add('active');
-                currentEngine = tab.dataset.engine;
-
-                document.querySelectorAll('.edge-only').forEach(el => {
-                    el.style.display = currentEngine === 'edge_tts' ? '' : 'none';
-                });
-                document.querySelectorAll('.elevenlabs-only').forEach(el => {
-                    el.style.display = currentEngine === 'elevenlabs' ? '' : 'none';
-                });
-
-                modelGroup.style.display = currentEngine === 'elevenlabs' ? '' : 'none';
-                refreshVoicesBtn.style.display = currentEngine === 'elevenlabs' ? '' : 'none';
-                elevenlabsNotice.style.display = 'none';
-
-                loadVoices();
-            });
-        });
-
-        refreshVoicesBtn.addEventListener('click', loadVoices);
+        
 
         // ===== Завантаження голосів =====
         async function loadVoices() {
             try {
                 voiceSelect.innerHTML = '<option>Завантаження...</option>';
-                // Завантажуємо обидва списки паралельно
-                const [rEdge, rEleven] = await Promise.all([
-                    fetch(`${API}/voices?engine=edge_tts`),
-                    fetch(`${API}/voices?engine=elevenlabs`)
-                ]);
-                const edgeData   = await rEdge.json();
-                const elevenData = await rEleven.json();
-
+                const r = await fetch(`${API}/voices`);
+                const data = await r.json();
                 voiceSelect.innerHTML = '';
-                renderAllVoices(edgeData.voices || [], elevenData.voices || []);
+                renderEdgeVoices(data.voices);
             } catch (e) {
                 voiceSelect.innerHTML = '<option>Помилка завантаження</option>';
                 setStatus('Не вдалося завантажити голоси', 'error');
             }
         }
 
-        function renderAllVoices(edgeVoices, elevenVoices) {
-            // ── Голоси нейронної мережі (ElevenLabs) ──
-            if (elevenVoices.length > 0) {
-                const female = elevenVoices.filter(v => v.gender === 'female');
-                const male   = elevenVoices.filter(v => v.gender !== 'female');
-
-                const addElevenGroup = (label, voices) => {
-                    if (!voices.length) return;
-                    const group = document.createElement('optgroup');
-                    group.label = label;
-                    voices.forEach(v => {
-                        const opt = document.createElement('option');
-                        opt.value = v.voice_id;
-                        opt.dataset.engine = 'elevenlabs';
-                        opt.textContent = v.description ? `${v.name} — ${v.description}` : v.name;
-                        group.appendChild(opt);
-                    });
-                    voiceSelect.appendChild(group);
-                };
-                addElevenGroup('🎙 Нейронні голоси — Жіночі', female);
-                addElevenGroup('🎙 Нейронні голоси — Чоловічі', male);
-            }
-
-            // ── Мультимовні голоси (Edge TTS) ──
-            if (edgeVoices.length > 0) {
-                const byLang = {};
-                edgeVoices.forEach(v => {
-                    const lang = v.language || 'other';
-                    if (!byLang[lang]) byLang[lang] = [];
-                    byLang[lang].push(v);
-                });
-                const order  = ['uk','en','de','fr','es','it','pl','ja','zh'];
-                const labels = {
-                    'uk':'🇺🇦 Українська','en':'🇬🇧 English','de':'🇩🇪 Deutsch',
-                    'fr':'🇫🇷 Français','es':'🇪🇸 Español','it':'🇮🇹 Italiano',
-                    'pl':'🇵🇱 Polski','ja':'🇯🇵 日本語','zh':'🇨🇳 中文'
-                };
-                order.forEach(lang => {
-                    if (!byLang[lang]) return;
-                    const group = document.createElement('optgroup');
-                    group.label = labels[lang] || lang;
-                    byLang[lang].forEach(v => {
-                        const opt = document.createElement('option');
-                        opt.value = v.voice_id;
-                        opt.dataset.engine = 'edge_tts';
-                        opt.textContent = `${v.name} — ${v.description}`;
-                        group.appendChild(opt);
-                    });
-                    voiceSelect.appendChild(group);
-                });
-            }
-        }
+        
+        
 
         function renderEdgeVoices(voices) {
             const byLang = {};
@@ -408,49 +245,7 @@
             });
         }
 
-        function renderElevenVoices(data) {
-            if (!data.voices || data.voices.length === 0) {
-                voiceSelect.innerHTML = '<option disabled selected>Немає доступних голосів</option>';
-                elevenlabsNotice.style.display = 'flex';
-                return;
-            }
-
-            elevenlabsNotice.style.display = 'none';
-
-            // Групуємо за статтю
-            const female = data.voices.filter(v => v.gender === 'female');
-            const male = data.voices.filter(v => v.gender !== 'female');
-
-            const addGroup = (label, voices) => {
-                if (voices.length === 0) return;
-                const group = document.createElement('optgroup');
-                group.label = label;
-                voices.forEach(v => {
-                    const opt = document.createElement('option');
-                    opt.value = v.voice_id;
-                    opt.textContent = v.description ? `${v.name} — ${v.description}` : v.name;
-                    group.appendChild(opt);
-                });
-                voiceSelect.appendChild(group);
-            };
-
-            addGroup('Жіночі голоси', female);
-            addGroup('Чоловічі голоси', male);
-        }
-
-        // ===== Перевірка стану ElevenLabs =====
-        async function checkElevenLabs() {
-            try {
-                const r = await fetch(`${API}/elevenlabs/info`);
-                if (r.ok) {
-                    const data = await r.json();
-                    if (data.tier) {
-                        elevenlabsBadge.textContent = data.tier === 'free' ? 'Free' : data.tier;
-                    }
-                }
-            } catch (e) {}
-        }
-
+        
         // ===== Лічильник + детектор мови =====
         sourceText.addEventListener('input', () => {
             updateCharCount();
@@ -692,25 +487,14 @@
             const t0 = Date.now();
 
             try {
-                // Визначаємо рушій за обраним голосом
-                const selectedOpt = voiceSelect.options[voiceSelect.selectedIndex];
-                const resolvedEngine = (selectedOpt && selectedOpt.dataset.engine) || 'edge_tts';
-
                 const payload = {
                     text,
-                    engine: resolvedEngine,
-                    voice_id: voiceSelect.value
+                    engine: 'edge_tts',
+                    voice_id: voiceSelect.value,
+                    rate:   parseInt(sliders.rate.input.value),
+                    volume: parseInt(sliders.volume.input.value),
+                    pitch:  parseInt(sliders.pitch.input.value)
                 };
-
-                if (resolvedEngine === 'edge_tts') {
-                    payload.rate = parseInt(sliders.rate.input.value);
-                    payload.volume = parseInt(sliders.volume.input.value);
-                    payload.pitch = parseInt(sliders.pitch.input.value);
-                } else {
-                    payload.model_id = 'eleven_multilingual_v2';
-                    payload.stability = 0.5;
-                    payload.similarity_boost = 0.75;
-                }
 
                 const r = await fetch(`${API}/synthesize`, {
                     method: 'POST',
@@ -785,7 +569,7 @@
         async function init() {
             initSliders();
             updateCharCount();
-            await checkElevenLabs();
+            await
             await loadVoices();
         }
 
