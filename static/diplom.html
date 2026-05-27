@@ -179,8 +179,6 @@
             rate: {input: $('rateSlider'), value: $('rateValue'), suffix: '%'},
             volume: {input: $('volumeSlider'), value: $('volumeValue'), suffix: '%'},
             pitch: {input: $('pitchSlider'), value: $('pitchValue'), suffix: ' Hz'},
-            stability: {input: $('stabilitySlider'), value: $('stabilityValue'), suffix: ''},
-            similarity: {input: $('similaritySlider'), value: $('similarityValue'), suffix: ''},
         };
 
         
@@ -207,14 +205,11 @@
         // ===== Слайдери =====
         function initSliders() {
             Object.entries(sliders).forEach(([key, s]) => {
+                if (!s.input || !s.value) return;
                 s.input.addEventListener('input', () => {
                     let val = parseFloat(s.input.value);
-                    if (key === 'stability' || key === 'similarity') {
-                        s.value.textContent = val.toFixed(2);
-                    } else {
-                        const sign = val >= 0 ? '+' : '';
-                        s.value.textContent = `${sign}${val}${s.suffix}`;
-                    }
+                    const sign = val >= 0 ? '+' : '';
+                    s.value.textContent = `${sign}${val}${s.suffix}`;
                 });
             });
         }
