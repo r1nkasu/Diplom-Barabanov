@@ -1,0 +1,799 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Speech Studio — Синтез мовлення</title>
+    <link rel="stylesheet" href="diplom.css">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <div class="header__brand">
+                <span class="header__brand-dot"></span>
+                <span>Speech Studio</span>
+            </div>
+            <h1>Синтез мовлення</h1>
+            <p>Перетворюйте текст на природне мовлення за допомогою нейронних мереж</p>
+        </header>
+
+        <!-- Вибір рушія -->
+        <div class="engine-tabs" role="tablist" style="display:none">
+            <button class="engine-tab active" data-engine="edge_tts" role="tab">
+                Microsoft Edge TTS
+                <span class="engine-tab__badge">Безкоштовно</span>
+            </button>
+            <button class="engine-tab" data-engine="elevenlabs" role="tab">
+                ElevenLabs
+                <span class="engine-tab__badge" id="elevenlabsBadge">Підключено</span>
+            </button>
+        </div>
+
+        <!-- Notice для ElevenLabs -->
+        <div class="notice notice--warning" id="elevenlabsNotice" style="display:none !important;visibility:hidden;">
+            <svg class="notice__icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                <line x1="12" y1="9" x2="12" y2="13"/>
+                <line x1="12" y1="17" x2="12.01" y2="17"/>
+            </svg>
+            <div>
+                <strong>Безкоштовний план ElevenLabs обмежений.</strong>
+                Якщо синтез не вдається — більшість стандартних голосів через API доступні лише на платних тарифах.
+                Рекомендуємо використовувати Microsoft Edge TTS, який працює безкоштовно та без обмежень.
+            </div>
+        </div>
+
+        <!-- Налаштування -->
+        <section class="card">
+            <div class="card__header">
+                <span class="card__title">Параметри</span>
+                <button class="btn-sm" id="refreshVoicesBtn" style="display:none !important;">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="23 4 23 10 17 10"/>
+                        <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+                    </svg>
+                    Оновити
+                </button>
+            </div>
+            <div class="card__body">
+                <div class="form-grid" id="settingsGrid">
+                    <div class="field">
+                        <label class="field__label" for="voiceSelect">Голос</label>
+                        <select class="select" id="voiceSelect"></select>
+                    </div>
+
+                    <div class="field" id="modelGroup" style="display:none !important;">
+                        <label class="field__label" for="modelSelect">Модель</label>
+                        <select class="select" id="modelSelect">
+                            <option value="eleven_multilingual_v2">Multilingual v2 — найкраща якість</option>
+                            <option value="eleven_flash_v2_5">Flash v2.5 — найшвидша</option>
+                            <option value="eleven_turbo_v2_5">Turbo v2.5 — баланс</option>
+                        </select>
+                    </div>
+
+                    <!-- Edge TTS параметри -->
+                    <div class="slider edge-only">
+                        <div class="slider__header">
+                            <span class="slider__label">Швидкість</span>
+                            <span class="slider__value" id="rateValue">0%</span>
+                        </div>
+                        <input type="range" id="rateSlider" min="-50" max="50" step="5" value="0">
+                    </div>
+
+                    <div class="slider edge-only">
+                        <div class="slider__header">
+                            <span class="slider__label">Гучність</span>
+                            <span class="slider__value" id="volumeValue">0%</span>
+                        </div>
+                        <input type="range" id="volumeSlider" min="-50" max="50" step="5" value="0">
+                    </div>
+
+                    <div class="slider edge-only">
+                        <div class="slider__header">
+                            <span class="slider__label">Висота тону</span>
+                            <span class="slider__value" id="pitchValue">0 Hz</span>
+                        </div>
+                        <input type="range" id="pitchSlider" min="-50" max="50" step="5" value="0">
+                    </div>
+
+                    <!-- ElevenLabs параметри -->
+                    <div class="slider elevenlabs-only" style="display:none !important;">
+                        <div class="slider__header">
+                            <span class="slider__label">Стабільність</span>
+                            <span class="slider__value" id="stabilityValue">0.50</span>
+                        </div>
+                        <input type="range" id="stabilitySlider" min="0" max="1" step="0.05" value="0.5">
+                    </div>
+
+                    <div class="slider elevenlabs-only" style="display:none !important;">
+                        <div class="slider__header">
+                            <span class="slider__label">Схожість</span>
+                            <span class="slider__value" id="similarityValue">0.75</span>
+                        </div>
+                        <input type="range" id="similaritySlider" min="0" max="1" step="0.05" value="0.75">
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Завантаження файлів -->
+        <section class="card">
+            <div class="card__header">
+                <span class="card__title">Джерело тексту</span>
+            </div>
+            <div class="card__body">
+                <div class="upload" id="uploadArea">
+                    <svg class="upload__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                        <polyline points="17 8 12 3 7 8"/>
+                        <line x1="12" y1="3" x2="12" y2="15"/>
+                    </svg>
+                    <div class="upload__title">Завантажити документ</div>
+                    <div class="upload__hint">Перетягніть файл або клацніть для вибору</div>
+                    <div class="upload__formats">PDF · DOCX · TXT · JPG · PNG</div>
+                    <input type="file" id="fileInput" accept=".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png" hidden>
+                </div>
+                <div class="uploaded-file" id="uploadedFile" style="display: none; margin-top: 12px;">
+                    <span class="uploaded-file__name" id="fileName"></span>
+                    <button class="uploaded-file__remove" id="removeFile" title="Видалити">×</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Текст -->
+        <section class="card">
+            <div class="card__header">
+                <span class="card__title">Текст</span>
+            </div>
+            <div class="card__body">
+                <div class="lang-hint" id="languageHint">
+                    <span>Виявлено мову:</span>
+                    <strong id="detectedLangName"></strong>
+                    <button class="lang-hint__close" id="closeHint">×</button>
+                </div>
+
+                <div class="textarea-wrapper">
+                    <textarea
+                        class="textarea"
+                        id="sourceText"
+                        placeholder="Введіть текст для озвучування або скористайтесь інструментами праворуч..."
+                    ></textarea>
+
+                    <div class="textarea-tools">
+                        <button class="icon-btn" id="imageBtn" title="Розпізнати з зображення (OCR)">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+                                <circle cx="12" cy="13" r="4"/>
+                            </svg>
+                        </button>
+                        <input type="file" id="imageInput" accept="image/*" hidden>
+                    </div>
+
+                    <span class="char-count" id="sourceCount">0 / 5000</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Аудіоплеєр -->
+        <section class="card player" id="audioPlayerSection">
+            <div class="card__header">
+                <span class="card__title">Аудіо</span>
+                <span class="audio-info" id="audioInfo" style="font-size: 12px; color: var(--text-muted);"></span>
+            </div>
+            <div class="card__body">
+                <audio id="audioPlayer" controls></audio>
+            </div>
+        </section>
+
+        <!-- Статус -->
+        <div class="status">
+            <div class="status__dot" id="statusDot"></div>
+            <span class="status__text" id="statusText">Готово</span>
+        </div>
+
+        <!-- Дії -->
+        <div class="actions">
+            <button class="btn btn--primary" id="synthesizeBtn">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polygon points="5 3 19 12 5 21 5 3"/>
+                </svg>
+                Синтезувати
+            </button>
+            <button class="btn btn--secondary" id="downloadBtn" disabled>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                    <polyline points="7 10 12 15 17 10"/>
+                    <line x1="12" y1="15" x2="12" y2="3"/>
+                </svg>
+                Завантажити
+            </button>
+            <button class="btn btn--ghost" id="clearBtn">Очистити</button>
+        </div>
+    </div>
+
+    <!-- Бібліотеки -->
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4/dist/tesseract.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
+
+    <script>
+        const API = '/api';
+
+        // ===== Елементи =====
+        const $ = id => document.getElementById(id);
+        const sourceText = $('sourceText');
+        const sourceCount = $('sourceCount');
+        const voiceSelect = $('voiceSelect');
+        const modelSelect = $('modelSelect');
+        const modelGroup = $('modelGroup');
+        const audioPlayer = $('audioPlayer');
+        const audioPlayerSection = $('audioPlayerSection');
+        const audioInfo = $('audioInfo');
+        const statusDot = $('statusDot');
+        const statusText = $('statusText');
+        const synthesizeBtn = $('synthesizeBtn');
+        const downloadBtn = $('downloadBtn');
+        const clearBtn = $('clearBtn');
+        const refreshVoicesBtn = $('refreshVoicesBtn');
+        const elevenlabsNotice = $('elevenlabsNotice');
+        const elevenlabsBadge = $('elevenlabsBadge');
+
+        const sliders = {
+            rate: {input: $('rateSlider'), value: $('rateValue'), suffix: '%'},
+            volume: {input: $('volumeSlider'), value: $('volumeValue'), suffix: '%'},
+            pitch: {input: $('pitchSlider'), value: $('pitchValue'), suffix: ' Hz'},
+            stability: {input: $('stabilitySlider'), value: $('stabilityValue'), suffix: ''},
+            similarity: {input: $('similaritySlider'), value: $('similarityValue'), suffix: ''},
+        };
+
+        let currentEngine = 'edge_tts'; // engine fixed — UI shows unified voice list
+        let currentFile = null;
+        let detectionTimer = null;
+        let lastDetectedLang = null;
+        let currentAudioBlob = null;
+        const MAX_LEN = 5000;
+
+        // ===== Helpers =====
+        function setStatus(text, type = 'ready') {
+            statusText.textContent = text;
+            statusDot.className = 'status__dot';
+            if (type === 'processing') statusDot.classList.add('status__dot--processing');
+            if (type === 'error') statusDot.classList.add('status__dot--error');
+        }
+
+        function updateCharCount() {
+            const len = sourceText.value.length;
+            sourceCount.textContent = `${len.toLocaleString()} / ${MAX_LEN.toLocaleString()}`;
+            sourceCount.style.color = len > MAX_LEN ? 'var(--error)' : 'var(--text-muted)';
+        }
+
+        // ===== Слайдери =====
+        function initSliders() {
+            Object.entries(sliders).forEach(([key, s]) => {
+                s.input.addEventListener('input', () => {
+                    let val = parseFloat(s.input.value);
+                    if (key === 'stability' || key === 'similarity') {
+                        s.value.textContent = val.toFixed(2);
+                    } else {
+                        const sign = val >= 0 ? '+' : '';
+                        s.value.textContent = `${sign}${val}${s.suffix}`;
+                    }
+                });
+            });
+        }
+
+        // ===== Перемикання рушіїв =====
+        document.querySelectorAll('.engine-tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.engine-tab').forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                currentEngine = tab.dataset.engine;
+
+                document.querySelectorAll('.edge-only').forEach(el => {
+                    el.style.display = currentEngine === 'edge_tts' ? '' : 'none';
+                });
+                document.querySelectorAll('.elevenlabs-only').forEach(el => {
+                    el.style.display = currentEngine === 'elevenlabs' ? '' : 'none';
+                });
+
+                modelGroup.style.display = currentEngine === 'elevenlabs' ? '' : 'none';
+                refreshVoicesBtn.style.display = currentEngine === 'elevenlabs' ? '' : 'none';
+                elevenlabsNotice.style.display = 'none';
+
+                loadVoices();
+            });
+        });
+
+        refreshVoicesBtn.addEventListener('click', loadVoices);
+
+        // ===== Завантаження голосів =====
+        async function loadVoices() {
+            try {
+                voiceSelect.innerHTML = '<option>Завантаження...</option>';
+                // Завантажуємо обидва списки паралельно
+                const [rEdge, rEleven] = await Promise.all([
+                    fetch(`${API}/voices?engine=edge_tts`),
+                    fetch(`${API}/voices?engine=elevenlabs`)
+                ]);
+                const edgeData   = await rEdge.json();
+                const elevenData = await rEleven.json();
+
+                voiceSelect.innerHTML = '';
+                renderAllVoices(edgeData.voices || [], elevenData.voices || []);
+            } catch (e) {
+                voiceSelect.innerHTML = '<option>Помилка завантаження</option>';
+                setStatus('Не вдалося завантажити голоси', 'error');
+            }
+        }
+
+        function renderAllVoices(edgeVoices, elevenVoices) {
+            // ── Голоси нейронної мережі (ElevenLabs) ──
+            if (elevenVoices.length > 0) {
+                const female = elevenVoices.filter(v => v.gender === 'female');
+                const male   = elevenVoices.filter(v => v.gender !== 'female');
+
+                const addElevenGroup = (label, voices) => {
+                    if (!voices.length) return;
+                    const group = document.createElement('optgroup');
+                    group.label = label;
+                    voices.forEach(v => {
+                        const opt = document.createElement('option');
+                        opt.value = v.voice_id;
+                        opt.dataset.engine = 'elevenlabs';
+                        opt.textContent = v.description ? `${v.name} — ${v.description}` : v.name;
+                        group.appendChild(opt);
+                    });
+                    voiceSelect.appendChild(group);
+                };
+                addElevenGroup('🎙 Нейронні голоси — Жіночі', female);
+                addElevenGroup('🎙 Нейронні голоси — Чоловічі', male);
+            }
+
+            // ── Мультимовні голоси (Edge TTS) ──
+            if (edgeVoices.length > 0) {
+                const byLang = {};
+                edgeVoices.forEach(v => {
+                    const lang = v.language || 'other';
+                    if (!byLang[lang]) byLang[lang] = [];
+                    byLang[lang].push(v);
+                });
+                const order  = ['uk','en','de','fr','es','it','pl','ja','zh'];
+                const labels = {
+                    'uk':'🇺🇦 Українська','en':'🇬🇧 English','de':'🇩🇪 Deutsch',
+                    'fr':'🇫🇷 Français','es':'🇪🇸 Español','it':'🇮🇹 Italiano',
+                    'pl':'🇵🇱 Polski','ja':'🇯🇵 日本語','zh':'🇨🇳 中文'
+                };
+                order.forEach(lang => {
+                    if (!byLang[lang]) return;
+                    const group = document.createElement('optgroup');
+                    group.label = labels[lang] || lang;
+                    byLang[lang].forEach(v => {
+                        const opt = document.createElement('option');
+                        opt.value = v.voice_id;
+                        opt.dataset.engine = 'edge_tts';
+                        opt.textContent = `${v.name} — ${v.description}`;
+                        group.appendChild(opt);
+                    });
+                    voiceSelect.appendChild(group);
+                });
+            }
+        }
+
+        function renderEdgeVoices(voices) {
+            const byLang = {};
+            voices.forEach(v => {
+                const lang = v.language || 'other';
+                if (!byLang[lang]) byLang[lang] = [];
+                byLang[lang].push(v);
+            });
+
+            const order = ['uk', 'en', 'de', 'fr', 'es', 'it', 'pl', 'ja', 'zh'];
+            const labels = {
+                'uk': 'Українська', 'en': 'English', 'de': 'Deutsch',
+                'fr': 'Français', 'es': 'Español', 'it': 'Italiano',
+                'pl': 'Polski', 'ja': '日本語', 'zh': '中文'
+            };
+
+            order.forEach(lang => {
+                if (!byLang[lang]) return;
+                const group = document.createElement('optgroup');
+                group.label = labels[lang] || lang;
+                byLang[lang].forEach(v => {
+                    const opt = document.createElement('option');
+                    opt.value = v.voice_id;
+                    opt.textContent = `${v.name} — ${v.description}`;
+                    group.appendChild(opt);
+                });
+                voiceSelect.appendChild(group);
+            });
+        }
+
+        function renderElevenVoices(data) {
+            if (!data.voices || data.voices.length === 0) {
+                voiceSelect.innerHTML = '<option disabled selected>Немає доступних голосів</option>';
+                elevenlabsNotice.style.display = 'flex';
+                return;
+            }
+
+            elevenlabsNotice.style.display = 'none';
+
+            // Групуємо за статтю
+            const female = data.voices.filter(v => v.gender === 'female');
+            const male = data.voices.filter(v => v.gender !== 'female');
+
+            const addGroup = (label, voices) => {
+                if (voices.length === 0) return;
+                const group = document.createElement('optgroup');
+                group.label = label;
+                voices.forEach(v => {
+                    const opt = document.createElement('option');
+                    opt.value = v.voice_id;
+                    opt.textContent = v.description ? `${v.name} — ${v.description}` : v.name;
+                    group.appendChild(opt);
+                });
+                voiceSelect.appendChild(group);
+            };
+
+            addGroup('Жіночі голоси', female);
+            addGroup('Чоловічі голоси', male);
+        }
+
+        // ===== Перевірка стану ElevenLabs =====
+        async function checkElevenLabs() {
+            try {
+                const r = await fetch(`${API}/elevenlabs/info`);
+                if (r.ok) {
+                    const data = await r.json();
+                    if (data.tier) {
+                        elevenlabsBadge.textContent = data.tier === 'free' ? 'Free' : data.tier;
+                    }
+                }
+            } catch (e) {}
+        }
+
+        // ===== Лічильник + детектор мови =====
+        sourceText.addEventListener('input', () => {
+            updateCharCount();
+            clearTimeout(detectionTimer);
+            const text = sourceText.value.trim();
+            if (text.length >= 10) {
+                detectionTimer = setTimeout(() => detectLang(text), 800);
+            } else {
+                $('languageHint').classList.remove('lang-hint--visible');
+            }
+        });
+
+        async function detectLang(text) {
+            try {
+                const r = await fetch(`${API}/detect`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({text})
+                });
+                if (!r.ok) return;
+                const data = await r.json();
+                if (data.detected_lang && data.detected_lang !== lastDetectedLang) {
+                    $('detectedLangName').textContent = data.lang_name;
+                    $('languageHint').classList.add('lang-hint--visible');
+                    lastDetectedLang = data.detected_lang;
+                }
+            } catch (e) {}
+        }
+
+        $('closeHint').addEventListener('click', () => {
+            $('languageHint').classList.remove('lang-hint--visible');
+        });
+
+        // ===== Файли =====
+        const uploadArea = $('uploadArea');
+        const fileInput = $('fileInput');
+        const uploadedFile = $('uploadedFile');
+
+        uploadArea.addEventListener('click', () => fileInput.click());
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('drag-over');
+        });
+        uploadArea.addEventListener('dragleave', () => uploadArea.classList.remove('drag-over'));
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('drag-over');
+            if (e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0]);
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length) handleFile(e.target.files[0]);
+        });
+
+        $('removeFile').addEventListener('click', () => {
+            currentFile = null;
+            uploadedFile.style.display = 'none';
+            uploadArea.style.display = '';
+            fileInput.value = '';
+            sourceText.value = '';
+            updateCharCount();
+        });
+
+        async function handleFile(file) {
+            currentFile = file;
+            $('fileName').textContent = file.name;
+            uploadArea.style.display = 'none';
+            uploadedFile.style.display = 'flex';
+
+            setStatus('Читаю файл...', 'processing');
+            try {
+                let text = '';
+                const ext = file.name.split('.').pop().toLowerCase();
+
+                if (ext === 'txt') text = await readText(file);
+                else if (ext === 'pdf') text = await readPDF(file);
+                else if (['docx', 'doc'].includes(ext)) text = await readDOCX(file);
+                else if (['jpg', 'jpeg', 'png'].includes(ext)) text = await runOCR(file);
+                else throw new Error('Непідтримуваний формат');
+
+                sourceText.value = text;
+                updateCharCount();
+                setStatus(`Прочитано (${text.length.toLocaleString()} символів)`, 'ready');
+            } catch (e) {
+                setStatus('Помилка: ' + e.message, 'error');
+            }
+        }
+
+        function readText(file) {
+            return new Promise((resolve, reject) => {
+                const r = new FileReader();
+                r.onload = (e) => resolve(e.target.result);
+                r.onerror = reject;
+                r.readAsText(file, 'utf-8');
+            });
+        }
+
+        async function readPDF(file) {
+            const ab = await file.arrayBuffer();
+            const pdf = await pdfjsLib.getDocument({data: ab}).promise;
+            let text = '';
+            for (let i = 1; i <= pdf.numPages; i++) {
+                const page = await pdf.getPage(i);
+                const c = await page.getTextContent();
+                text += c.items.map(it => it.str).join(' ') + '\n';
+            }
+            return text.trim();
+        }
+
+        async function readDOCX(file) {
+            const ab = await file.arrayBuffer();
+            const result = await mammoth.extractRawText({arrayBuffer: ab});
+            return result.value.trim();
+        }
+
+        // ===== OCR =====
+        $('imageBtn').addEventListener('click', () => $('imageInput').click());
+
+        $('imageInput').addEventListener('change', async (e) => {
+            if (!e.target.files.length) return;
+            const file = e.target.files[0];
+            setStatus('Розпізнавання...', 'processing');
+            try {
+                const text = await runOCR(file);
+                sourceText.value = text;
+                updateCharCount();
+                setStatus(`Розпізнано (${text.length.toLocaleString()} символів)`, 'ready');
+            } catch (err) {
+                setStatus('Помилка OCR: ' + err.message, 'error');
+            }
+        });
+
+        async function runOCR(file) {
+            // Препроцесинг зображення для кращого OCR:
+            // 1. Збільшуємо до подвоєного розміру
+            // 2. Конвертуємо у grayscale
+            // 3. Підсилюємо контраст (бінаризація через поріг)
+            const preprocessed = await preprocessImage(file);
+
+            // Тестуємо на двох наборах мов і вибираємо кращий результат
+            // (бо Tesseract з 3-ма мовами одразу часто плутається)
+            const langSets = [
+                {lang: 'ukr+rus+eng', label: 'українська'},
+                {lang: 'eng', label: 'англійська'}
+            ];
+
+            let bestResult = {text: '', confidence: 0};
+
+            for (const set of langSets) {
+                const result = await Tesseract.recognize(preprocessed, set.lang, {
+                    logger: m => {
+                        if (m.status === 'recognizing text') {
+                            const pct = Math.round(m.progress * 100);
+                            setStatus(`OCR (${set.label}): ${pct}%`, 'processing');
+                        }
+                    },
+                    tessedit_pageseg_mode: '3',  // Повністю автоматичний layout
+                    preserve_interword_spaces: '1'
+                });
+
+                const conf = result.data.confidence || 0;
+                const text = result.data.text.trim();
+
+                // Вибираємо кращий за впевненістю + наявністю тексту
+                if (conf > bestResult.confidence && text.length > 0) {
+                    bestResult = {text, confidence: conf};
+                }
+            }
+
+            // Чистимо результат від поширених сміттєвих символів
+            return cleanOCRText(bestResult.text);
+        }
+
+        async function preprocessImage(file) {
+            return new Promise((resolve, reject) => {
+                const img = new Image();
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    const ctx = canvas.getContext('2d');
+
+                    // Масштабуємо мінімум до 1500px по ширині для кращого OCR
+                    const targetWidth = Math.max(img.width, 1500);
+                    const scale = targetWidth / img.width;
+                    canvas.width = img.width * scale;
+                    canvas.height = img.height * scale;
+
+                    // Малюємо зі згладжуванням
+                    ctx.imageSmoothingEnabled = true;
+                    ctx.imageSmoothingQuality = 'high';
+                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+                    // Отримуємо пікселі і конвертуємо у grayscale + посилюємо контраст
+                    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                    const data = imageData.data;
+
+                    for (let i = 0; i < data.length; i += 4) {
+                        // Yiq luma (стандарт ITU-R BT.601 для grayscale)
+                        const gray = data[i] * 0.299 + data[i+1] * 0.587 + data[i+2] * 0.114;
+                        // Збільшуємо контраст за формулою: f(x) = clamp(1.4 * (x - 128) + 128)
+                        let enhanced = (gray - 128) * 1.3 + 128;
+                        enhanced = Math.max(0, Math.min(255, enhanced));
+                        data[i] = data[i+1] = data[i+2] = enhanced;
+                    }
+
+                    ctx.putImageData(imageData, 0, 0);
+                    canvas.toBlob(blob => resolve(blob), 'image/png');
+                };
+                img.onerror = reject;
+                img.src = URL.createObjectURL(file);
+            });
+        }
+
+        function cleanOCRText(text) {
+            return text
+                // Прибираємо самотні дивні символи на початку рядків
+                .replace(/^[^\wа-яА-ЯїЇєЄіІґҐ\s]+/gm, '')
+                // Прибираємо одинокі спецсимволи серед літер (типу `|`, `~`, `^`)
+                .replace(/[\|~\^]+/g, '')
+                // Збираємо повторні пробіли в один
+                .replace(/[ \t]+/g, ' ')
+                // Прибираємо більше двох порожніх рядків поспіль
+                .replace(/\n{3,}/g, '\n\n')
+                .trim();
+        }
+
+        // ===== Синтез =====
+        synthesizeBtn.addEventListener('click', async () => {
+            const text = sourceText.value.trim();
+            if (!text) { setStatus('Введіть текст', 'error'); return; }
+            if (text.length > MAX_LEN) {
+                setStatus(`Перевищено ліміт: ${text.length.toLocaleString()} > ${MAX_LEN.toLocaleString()}`, 'error');
+                return;
+            }
+            if (!voiceSelect.value) { setStatus('Оберіть голос', 'error'); return; }
+
+            synthesizeBtn.disabled = true;
+            downloadBtn.disabled = true;
+            setStatus('Синтез...', 'processing');
+            const t0 = Date.now();
+
+            try {
+                // Визначаємо рушій за обраним голосом
+                const selectedOpt = voiceSelect.options[voiceSelect.selectedIndex];
+                const resolvedEngine = (selectedOpt && selectedOpt.dataset.engine) || 'edge_tts';
+
+                const payload = {
+                    text,
+                    engine: resolvedEngine,
+                    voice_id: voiceSelect.value
+                };
+
+                if (resolvedEngine === 'edge_tts') {
+                    payload.rate = parseInt(sliders.rate.input.value);
+                    payload.volume = parseInt(sliders.volume.input.value);
+                    payload.pitch = parseInt(sliders.pitch.input.value);
+                } else {
+                    payload.model_id = 'eleven_multilingual_v2';
+                    payload.stability = 0.5;
+                    payload.similarity_boost = 0.75;
+                }
+
+                const r = await fetch(`${API}/synthesize`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(payload)
+                });
+
+                if (!r.ok) {
+                    const err = await r.json();
+                    throw new Error(err.error || 'Помилка синтезу');
+                }
+
+                const data = await r.json();
+                const elapsed = ((Date.now() - t0) / 1000).toFixed(2);
+
+                const bytes = atob(data.audio_base64);
+                const arr = new Uint8Array(bytes.length);
+                for (let i = 0; i < bytes.length; i++) arr[i] = bytes.charCodeAt(i);
+                currentAudioBlob = new Blob([arr], {type: 'audio/mpeg'});
+
+                audioPlayer.src = URL.createObjectURL(currentAudioBlob);
+                audioPlayerSection.classList.add('player--active');
+                audioInfo.textContent = `${(data.audio_size_bytes / 1024).toFixed(1)} КБ · ${elapsed} с`;
+
+                downloadBtn.disabled = false;
+                setStatus(`Готово (${elapsed} с)`, 'ready');
+                audioPlayer.play().catch(() => {});
+
+            } catch (err) {
+                setStatus(err.message, 'error');
+            } finally {
+                synthesizeBtn.disabled = false;
+            }
+        });
+
+        // ===== Завантаження =====
+        downloadBtn.addEventListener('click', () => {
+            if (!currentAudioBlob) return;
+            const url = URL.createObjectURL(currentAudioBlob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `speech_${Date.now()}.mp3`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        });
+
+        // ===== Очищення =====
+        clearBtn.addEventListener('click', () => {
+            sourceText.value = '';
+            updateCharCount();
+            audioPlayerSection.classList.remove('player--active');
+            audioPlayer.src = '';
+            currentAudioBlob = null;
+            downloadBtn.disabled = true;
+            $('languageHint').classList.remove('lang-hint--visible');
+            lastDetectedLang = null;
+            if (currentFile) {
+                currentFile = null;
+                uploadedFile.style.display = 'none';
+                uploadArea.style.display = '';
+                fileInput.value = '';
+            }
+            setStatus('Готово', 'ready');
+        });
+
+        // ===== Init =====
+        pdfjsLib.GlobalWorkerOptions.workerSrc =
+            'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+        async function init() {
+            initSliders();
+            updateCharCount();
+            await checkElevenLabs();
+            await loadVoices();
+        }
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', init);
+        } else {
+            init();
+        }
+    </script>
+</body>
+</html>
