@@ -222,45 +222,65 @@
         
 
         // ===== Завантаження голосів =====
-        async function loadVoices() {
-            try {
-                voiceSelect.innerHTML = '<option>Завантаження...</option>';
-                const r = await fetch(`${API}/voices`);
-                const data = await r.json();
-                voiceSelect.innerHTML = '';
-                renderEdgeVoices(data.voices);
-            } catch (e) {
-                voiceSelect.innerHTML = '<option>Помилка завантаження</option>';
-                setStatus('Не вдалося завантажити голоси', 'error');
-            }
-        }
+        // Голоси вбудовані напряму — не залежать від API
+        const VOICES = [
+            // Українська
+            { id: 'uk-UA-OstapNeural',       name: 'Остап',          desc: 'Український чоловічий', lang: 'uk' },
+            { id: 'uk-UA-PolinaNeural',      name: 'Поліна',         desc: 'Український жіночий',   lang: 'uk' },
+            // English
+            { id: 'en-US-AriaNeural',        name: 'Aria (US)',      desc: 'Виразний жіночий',      lang: 'en' },
+            { id: 'en-US-JennyNeural',       name: 'Jenny (US)',     desc: 'Дружній жіночий',       lang: 'en' },
+            { id: 'en-US-EmmaNeural',        name: 'Emma (US)',      desc: 'Молодий жіночий',       lang: 'en' },
+            { id: 'en-US-GuyNeural',         name: 'Guy (US)',       desc: 'Нейтральний чоловічий', lang: 'en' },
+            { id: 'en-US-DavisNeural',       name: 'Davis (US)',     desc: 'Глибокий чоловічий',    lang: 'en' },
+            { id: 'en-US-AndrewNeural',      name: 'Andrew (US)',    desc: 'Теплий чоловічий',      lang: 'en' },
+            { id: 'en-US-BrianNeural',       name: 'Brian (US)',     desc: 'Розповідач',            lang: 'en' },
+            { id: 'en-GB-SoniaNeural',       name: 'Sonia (UK)',     desc: 'Британський жіночий',   lang: 'en' },
+            { id: 'en-GB-RyanNeural',        name: 'Ryan (UK)',      desc: 'Британський чоловічий', lang: 'en' },
+            // Deutsch
+            { id: 'de-DE-KatjaNeural',       name: 'Katja (DE)',     desc: 'Жіночий',               lang: 'de' },
+            { id: 'de-DE-ConradNeural',      name: 'Conrad (DE)',    desc: 'Чоловічий',             lang: 'de' },
+            // Français
+            { id: 'fr-FR-DeniseNeural',      name: 'Denise (FR)',    desc: 'Жіночий',               lang: 'fr' },
+            { id: 'fr-FR-HenriNeural',       name: 'Henri (FR)',     desc: 'Чоловічий',             lang: 'fr' },
+            // Español
+            { id: 'es-ES-ElviraNeural',      name: 'Elvira (ES)',    desc: 'Жіночий',               lang: 'es' },
+            { id: 'es-ES-AlvaroNeural',      name: 'Alvaro (ES)',    desc: 'Чоловічий',             lang: 'es' },
+            // Italiano
+            { id: 'it-IT-ElsaNeural',        name: 'Elsa (IT)',      desc: 'Жіночий',               lang: 'it' },
+            { id: 'it-IT-DiegoNeural',       name: 'Diego (IT)',     desc: 'Чоловічий',             lang: 'it' },
+            // Polski
+            { id: 'pl-PL-AgnieszkaNeural',   name: 'Agnieszka (PL)', desc: 'Жіночий',              lang: 'pl' },
+            { id: 'pl-PL-MarekNeural',       name: 'Marek (PL)',     desc: 'Чоловічий',             lang: 'pl' },
+            // 日本語
+            { id: 'ja-JP-NanamiNeural',      name: 'Nanami (JP)',    desc: 'Жіночий',               lang: 'ja' },
+            { id: 'ja-JP-KeitaNeural',       name: 'Keita (JP)',     desc: 'Чоловічий',             lang: 'ja' },
+            // 中文
+            { id: 'zh-CN-XiaoxiaoNeural',    name: 'Xiaoxiao (CN)', desc: 'Жіночий',               lang: 'zh' },
+            { id: 'zh-CN-YunxiNeural',       name: 'Yunxi (CN)',    desc: 'Чоловічий',             lang: 'zh' },
+        ];
 
-        
-        
+        const LANG_LABELS = {
+            'uk': 'Українська', 'en': 'English',  'de': 'Deutsch',
+            'fr': 'Français',   'es': 'Español',  'it': 'Italiano',
+            'pl': 'Polski',     'ja': '日本語',    'zh': '中文'
+        };
 
-        function renderEdgeVoices(voices) {
+        function loadVoices() {
+            voiceSelect.innerHTML = '';
             const byLang = {};
-            voices.forEach(v => {
-                const lang = v.language || 'other';
-                if (!byLang[lang]) byLang[lang] = [];
-                byLang[lang].push(v);
+            VOICES.forEach(v => {
+                if (!byLang[v.lang]) byLang[v.lang] = [];
+                byLang[v.lang].push(v);
             });
-
-            const order = ['uk', 'en', 'de', 'fr', 'es', 'it', 'pl', 'ja', 'zh'];
-            const labels = {
-                'uk': 'Українська', 'en': 'English', 'de': 'Deutsch',
-                'fr': 'Français', 'es': 'Español', 'it': 'Italiano',
-                'pl': 'Polski', 'ja': '日本語', 'zh': '中文'
-            };
-
-            order.forEach(lang => {
+            Object.keys(LANG_LABELS).forEach(lang => {
                 if (!byLang[lang]) return;
                 const group = document.createElement('optgroup');
-                group.label = labels[lang] || lang;
+                group.label = LANG_LABELS[lang];
                 byLang[lang].forEach(v => {
                     const opt = document.createElement('option');
-                    opt.value = v.voice_id;
-                    opt.textContent = `${v.name} — ${v.description}`;
+                    opt.value = v.id;
+                    opt.textContent = `${v.name} — ${v.desc}`;
                     group.appendChild(opt);
                 });
                 voiceSelect.appendChild(group);
@@ -591,7 +611,7 @@
         async function init() {
             initSliders();
             updateCharCount();
-            await loadVoices();
+            loadVoices();
         }
 
         if (document.readyState === 'loading') {
